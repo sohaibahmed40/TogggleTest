@@ -1,18 +1,23 @@
 import React, { useState } from "react";
+import { usePromiseTracker, trackPromise } from "react-promise-tracker";
 import 'bootstrap/dist/css/bootstrap.css';
 import { Link } from "react-router-dom";
 import axios from "axios";
-const registerUrl='https://n1i8b10t8i.execute-api.ap-south-1.amazonaws.com/prod/register'
+const registerUrl = 'https://n1i8b10t8i.execute-api.ap-south-1.amazonaws.com/prod/register'
+
+
 
 function SignUp() {
+  const { promiseInProgress } = usePromiseTracker();
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [passwordError, setpasswordError] = useState("");
   const [emailError, setemailError] = useState("");
   const [Message, setMessage] = useState("");
-  
+  const [loading, setLoading] = useState(false);
+
   const handleValidation = (event) => {
-    console.log('Inside Validation:',password, email)
+    console.log('Inside Validation:', password, email)
     let formIsValid = true;
 
     if (!email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)) {
@@ -35,73 +40,81 @@ function SignUp() {
       formIsValid = true;
     }
 
-    console.log('Inside Validation:',formIsValid)
+    console.log('Inside Validation:', formIsValid)
     return formIsValid;
   };
 
   const loginSubmit = (e) => {
     e.preventDefault();
-    handleValidation();
-    const requestBody={
-        email:email,
-        password:password
+    setLoading(true);
+    setMessage("");
+    const validate = handleValidation();
+    if (validate == false)
+      return;
+    const requestBody = {
+      email: email,
+      password: password
     }
-    axios.post(registerUrl,requestBody).then(res=>{
-        setMessage('Registration SuccessFul');
-    }).catch(error=>{
-        console.log('Error:',error);
-        if(error.response.status===401)
+
+    trackPromise(axios.post(registerUrl, requestBody).then(res => {
+      setMessage('Registration SuccessFul');
+    }).catch(error => {
+      console.log('Error:', error);
+      if (error.response.status === 401)
         setMessage(error.response.data.message)
-        else if(error.response.status===403)
+      else if (error.response.status === 403)
         setMessage(error.response.data.message)
-        else
+      else
         setMessage("Sorry server is not responding... Please try again later")
     })
+    )
   };
 
   return (
     <div className="Auth-form-container">
-    <form className="Auth-form" onSubmit={loginSubmit}>
-      <div className="Auth-form-content">
-        <h3 className="Auth-form-title">Sign Up</h3>
-        <div className="form-group mt-3">
-          <label>Email address</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e)=>setEmail(e.target.value)}
-            className="form-control mt-1"
-            placeholder="Enter email"
-          />            
-          <small id="emailHelp" className="text-danger form-text">
-          {emailError}
-        </small>
+      <form className="Auth-form" onSubmit={loginSubmit}>
+        <div className="Auth-form-content">
+          <h3 className="Auth-form-title">Sign Up</h3>
+          <div className="form-group mt-3">
+            <label>Email address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="form-control mt-1"
+              placeholder="Enter email"
+            />
+            <small id="emailHelp" className="text-danger form-text">
+              {emailError}
+            </small>
+          </div>
+          <div className="form-group mt-3">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="form-control mt-1"
+              placeholder="Enter password"
+            />
+            <small id="passworderror" className="text-danger form-text">
+              {passwordError}
+            </small>
+          </div>
+          <div className="d-grid gap-2 mt-3">
+            {!promiseInProgress ? <button type="submit" className="btn btn-primary">
+              Submit
+            </button> : <button disabled className="btn btn-primary">
+              please wait ...
+            </button>}
+          </div>
+          <p className="forgot-password text-right mt-2">
+            <Link to="/login">Already have an account?</Link>
+          </p>
+          <p style={{ color: 'red' }}>{Message}</p>
         </div>
-        <div className="form-group mt-3">
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e=>setPassword(e.target.value)}
-            className="form-control mt-1"
-            placeholder="Enter password"
-          />      
-          <small id="passworderror" className="text-danger form-text">
-          {passwordError}
-        </small>
-        </div>
-        <div className="d-grid gap-2 mt-3">
-          <button type="submit" className="btn btn-primary">
-            Submit
-          </button>
-        </div>
-        <p className="forgot-password text-right mt-2">
-        <Link to="/login">Already have an account?</Link>
-        </p>
-        <p color="red">{Message}</p>
-      </div>
-    </form>
-  </div>
+      </form>
+    </div>
   );
 }
 export default SignUp;

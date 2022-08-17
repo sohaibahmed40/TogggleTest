@@ -1,6 +1,6 @@
 module.exports = {
     getUser: function () {
-        const user = sessionStorage.getItem('user');
+        const user = localStorage.getItem('user');
         if (typeof (user) == 'undefined') {
             return null
         } else {
@@ -8,21 +8,21 @@ module.exports = {
         }
     },
     getToken: function () {
-        return sessionStorage.getItem('token');
+        return localStorage.getItem('token');
     },
 
-    setUser:function(user){
-        sessionStorage.setItem('user',JSON.stringify(user))
+    setUser: function (user) {
+        localStorage.setItem('user', JSON.stringify(user))
     },
 
-    setUserSession:function(user,token){
-        sessionStorage.setItem('user',JSON.stringify(user));
-        sessionStorage.setItem('token',token);
+    setUserSession: function (user, token) {
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', token);
     },
 
-    resetUserSession:function(user,token){
-        sessionStorage.removeItem('user');
-        sessionStorage.removeItem('token');
+    resetUserSession: function (user, token) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
     },
 
 }

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { usePromiseTracker, trackPromise } from "react-promise-tracker";
 import 'bootstrap/dist/css/bootstrap.css';
 import '../App.css'
 import { Link, useNavigate } from "react-router-dom";
@@ -8,13 +9,14 @@ const loginUrl = 'https://n1i8b10t8i.execute-api.ap-south-1.amazonaws.com/prod/l
 
 
 
-function Login() {
+function Login(props) {
+    const { promiseInProgress } = usePromiseTracker();
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [passwordError, setpasswordError] = useState("");
     const [emailError, setemailError] = useState("");
     const [Message, setMessage] = useState("");
-const navigate=useNavigate();
+    const navigate = useNavigate();
 
     const handleValidation = (event) => {
         console.log('Inside Validation:', password, email)
@@ -53,8 +55,10 @@ const navigate=useNavigate();
             password: password
         }
 
-        axios.post(loginUrl, requestBody).then(response => {
-            setUserSession(response.data.user,response.data.token);
+        trackPromise(axios.post(loginUrl, requestBody).then(response => {
+            setUserSession(response.data.user, response.data.token);
+            console.log("handle Login", props)
+            props.handleLogin();
             navigate('/dashboard')
         }).catch(error => {
             console.log('Error:', error);
@@ -64,7 +68,7 @@ const navigate=useNavigate();
                 setMessage(error.response.data.message)
             else
                 setMessage("Sorry server is not responding... Please try again later")
-        })
+        }))
     };
 
     return (
@@ -99,14 +103,16 @@ const navigate=useNavigate();
                         </small>
                     </div>
                     <div className="d-grid gap-2 mt-3">
-                        <button type="submit" className="btn btn-primary">
+                        {!promiseInProgress ? <button type="submit" className="btn btn-primary">
                             Submit
-                        </button>
+                        </button> : <button disabled className="btn btn-primary">
+                            Please wait...
+                        </button>}
                     </div>
                     <p className="forgot-password text-right mt-2">
                         <Link to="/sign-up">New User?</Link>
-                    </p>    
-                    <p color="red">{Message}</p>
+                    </p>
+                    <p style={{color:'red'}}>{Message}</p>
                 </div>
             </form>
         </div>
